@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy New Year</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: black;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #fireworks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .countdown {
+      font-size: 5vw;
+      font-weight: bold;
+    }
+
+    .happy-new-year {
+      display: none;
+      font-size: 4vw;
+      font-weight: bold;
+      color: gold;
+      text-shadow: 0 0 5px gold, 0 0 20px orange;
+      text-align: center;
+    }
+
+    .wish-bar {
+      position: absolute;
+      bottom: 20px;
+      width: 90%;
+      max-width: 500px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .wish-bar form {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .wish-bar input, .wish-bar textarea {
+      padding: 1rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .wish-bar button {
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      background-color: gold;
+      color: black;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .wish-bar button:hover {
+      background-color: orange;
+    }
+
+    .show-form-btn {
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      background-color: gold;
+      color: black;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 2rem;
+      position: fixed;
+      bottom: 20px; /* Position the button at the bottom */
+      left: 50%;
+      transform: translateX(-50%); /* Center horizontally */
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 1s ease-in, visibility 1s ease-in;
+    }
+
+    .show-form-btn.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .show-form-btn:hover {
+      background-color: orange;
+    }
+
+    /* Media Queries for Smaller Screens */
+    @media (max-width: 600px) {
+      .countdown {
+        font-size: 20vw;
+      }
+
+      .happy-new-year {
+        font-size: 20vw;
+      }
+
+      .wish-bar input, .wish-bar textarea {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
+
+      .wish-bar button, .show-form-btn {
+        padding: 0.7rem 1.5rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fireworks"></canvas>
+  <div class="countdown">3</div>
+  <div class="happy-new-year">Happy New Year! 🎉🎉</div>
+  <div class="wish-bar">
+    <form action="https://api.web3forms.com/submit" method="POST" id="wish-form">
+      <input type="text" id="name" name="name" placeholder="Your Name" required />
+      <textarea id="message" name="message" placeholder="Your message..." required></textarea>
+      <input type="hidden" name="access_key" value="53af3acd-4bfb-468f-b233-63de8cc22232">
+      <button type="submit">Wish Me</button>
+    </form>
+  </div>
+  <button class="show-form-btn" id="show-form-btn">Wish Me</button>
+
+  <script>
+    const countdownEl = document.querySelector('.countdown');
+    const happyNewYearEl = document.querySelector('.happy-new-year');
+    const wishBarEl = document.querySelector('.wish-bar');
+    const showFormBtn = document.getElementById('show-form-btn');
+    let count = 3;
+
+    const countdownInterval = setInterval(() => {
+      countdownEl.textContent = count;
+      count--;
+      if (count < 0) {
+        clearInterval(countdownInterval);
+        countdownEl.style.display = 'none';
+        happyNewYearEl.style.display = 'block';
+        startFireworks();
+        setTimeout(() => {
+          showFormBtn.classList.add('show');
+        }, 1000);
+      }
+    }, 1000);
+
+    showFormBtn.addEventListener('click', function() {
+      wishBarEl.style.display = 'flex';
+      showFormBtn.style.display = 'none';
+    });
+
+    function startFireworks() {
+      const canvas = document.getElementById('fireworks');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+
+      function createParticle(x, y) {
+        const particle = {
+          x,
+          y,
+          size: Math.random() * 5 + 2,
+          speedX: Math.random() * 6 - 3,
+          speedY: Math.random() * 6 - 3,
+          gravity: 0.1,
+          color: `hsl(${Math.random() * 360}, 100%, 70%)`
+        };
+        particles.push(particle);
+      }
+
+      function updateParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.speedY += p.gravity;
+          p.size *= 0.95;
+          if (p.size < 1) {
+            particles.splice(i, 1);
+          }
+        }
+      }
+
+      function drawParticles() {
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        });
+      }
+
+      function animate() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        updateParticles();
+        drawParticles();
+        requestAnimationFrame(animate);
+      }
+
+      setInterval(() => {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        for (let i = 0; i < 30; i++) {
+          createParticle(x, y);
+        }
+      }, 300);
+
+      animate();
+    }
+  </script>
+</body>
+</html>
